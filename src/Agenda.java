@@ -2,7 +2,7 @@ import java.util.*;
 
 public class Agenda {
 
-    private static Map<String, List<String>> agenda = new HashMap<>();
+    public static Map<String, List<String>> agenda = new HashMap<>();
 
     public static void main(String[] args) {
 
@@ -11,165 +11,147 @@ public class Agenda {
 
         do {
             System.out.println("\n===== MENU =====");
-            System.out.println("1) Criar/editar/remover evento");
-            System.out.println("2) Listar eventos de uma data");
-            System.out.println("3) Pesquisar eventos por palavra-chave");
-            System.out.println("4) Checar conflito (auto ao criar/editar)");
-            System.out.println("5) Resumo: total de eventos e horários por data");
-            System.out.println("6) Sair");
-            System.out.print("Opção: ");
+            System.out.println("1) Criar evento");
+            System.out.println("2) Editar evento");
+            System.out.println("3) Remover evento específico");
+            System.out.println("4) Remover todos os eventos de uma data");
+            System.out.println("5) Listar eventos de uma data");
+            System.out.println("6) Pesquisar eventos por palavra-chave");
+            System.out.println("7) Mostrar todos os eventos");
+            System.out.println("8) Sair");
+            System.out.print("Opções: ");
             opcao = input.nextInt();
             input.nextLine();
 
             switch (opcao) {
+
                 case 1:
-                    menuGerenciarEvento(input);
+                    criarEvento(input);
                     break;
+
                 case 2:
-                    listarEventosData(input);
+                    editarEvento(input);
                     break;
+
                 case 3:
-                    pesquisarPalavra(input);
+                    removerEventoEspecifico(input);
                     break;
+
                 case 4:
-                    System.out.println("A checagem de conflito ocorre automaticamente ao criar/editar.");
+                    removerTodosEventosData(input);
                     break;
+
                 case 5:
-                    resumoEventos();
+                    listarEventosPorData(input);
                     break;
+
                 case 6:
-                    System.out.println("Saindo...");
+                    pesquisarEventosPorPalavra(input);
                     break;
+
+                case 7:
+                    mostrarTodosEventos();
+                    break;
+
+                case 8:
+                    System.out.println("Encerrando agenda...");
+                    break;
+
                 default:
-                    System.out.println("Opção inválida. Tente novamente.");
+                    System.out.println("Opção inválida!");
             }
 
-        } while (opcao != 6);
-    }
+        } while (opcao != 8);
 
-    public static void menuGerenciarEvento(Scanner input) {
-        System.out.println("\n--- Gerenciar Evento ---");
-        System.out.println("1) Criar evento");
-        System.out.println("2) Editar evento");
-        System.out.println("3) Remover evento");
-        System.out.print("Escolha: ");
-        int acao = input.nextInt();
-        input.nextLine();
-
-        switch (acao) {
-            case 1:
-                criarEvento(input);
-                break;
-            case 2:
-                editarEvento(input);
-                break;
-            case 3:
-                removerEvento(input);
-                break;
-            default:
-                System.out.println("Ação inválida.");
-        }
     }
 
     public static void criarEvento(Scanner input) {
-
-        System.out.print("Data (YYYY-MM-DD): ");
+        System.out.print("Data (DD/MM/YYYY): ");
         String data = input.nextLine();
 
         System.out.print("Horário (HH:MM): ");
-        String horario = input.nextLine();
+        String hora = input.nextLine();
 
         System.out.print("Título: ");
         String titulo = input.nextLine();
 
         List<String> eventos = agenda.getOrDefault(data, new ArrayList<>());
+        String evento = hora + " - " + titulo;
 
-        String evento = horario + " - " + titulo;
-
-        if (conflito(eventos, horario)) {
-            System.out.println("Conflito: já existe evento neste horário.");
-            return;
+        if (eventos.contains(evento)) {
+            System.out.println("Já existe evento nesse horário.");
+        } else {
+            eventos.add(evento);
+            Collections.sort(eventos);
+            agenda.put(data, eventos);
+            System.out.println("Evento criado com sucesso!");
         }
-
-        eventos.add(evento);
-        ordenarEventos(eventos);
-        agenda.put(data, eventos);
-
-        System.out.println("Evento criado!");
     }
 
     public static void editarEvento(Scanner input) {
-
-        System.out.print("Data: ");
+        System.out.print("Data do evento (DD/MM/YYYY): ");
         String data = input.nextLine();
 
         List<String> eventos = agenda.get(data);
 
         if (eventos == null || eventos.isEmpty()) {
-            System.out.println("Nenhum evento nesta data.");
+            System.out.println("Nenhum evento nessa data.");
             return;
         }
 
-        exibirEventos(eventos);
+        System.out.println("\nEventos dessa data:");
+        for (int i = 0; i < eventos.size(); i++) {
+            System.out.println((i + 1) + ") " + eventos.get(i));
+        }
 
-        System.out.print("Número do evento para editar: ");
-        int n = input.nextInt();
+        System.out.print("Escolha o número do evento para editar: ");
+        int num = input.nextInt();
         input.nextLine();
 
-        if (n < 1 || n > eventos.size()) {
-            System.out.println("Número inválido.");
+        if (num < 1 || num > eventos.size()) {
+            System.out.println("Número inválido!");
             return;
         }
-
-        String eventoAntigo = eventos.get(n - 1);
 
         System.out.print("Novo horário (HH:MM): ");
-        String novoHorario = input.nextLine();
+        String hora = input.nextLine();
 
         System.out.print("Novo título: ");
-        String novoTitulo = input.nextLine();
+        String titulo = input.nextLine();
 
-        // remove temporariamente para verificar conflito
-        eventos.remove(eventoAntigo);
+        String novoEvento = hora + " - " + titulo;
 
-        if (conflito(eventos, novoHorario)) {
-            System.out.println("Conflito: horário já ocupado.");
-            eventos.add(eventoAntigo); // restaura
-            ordenarEventos(eventos);
-            return;
-        }
-
-        String novoEvento = novoHorario + " - " + novoTitulo;
-        eventos.add(novoEvento);
-        ordenarEventos(eventos);
-
+        eventos.set(num - 1, novoEvento);
+        Collections.sort(eventos);
         System.out.println("Evento atualizado!");
     }
 
-    public static void removerEvento(Scanner input) {
-
-        System.out.print("Data: ");
+    public static void removerEventoEspecifico(Scanner input) {
+        System.out.print("Data (DD/MM/YYYY): ");
         String data = input.nextLine();
 
         List<String> eventos = agenda.get(data);
 
         if (eventos == null || eventos.isEmpty()) {
-            System.out.println("Nenhum evento nesta data.");
+            System.out.println("Nenhum evento nessa data.");
             return;
         }
 
-        exibirEventos(eventos);
+        System.out.println("\nEventos dessa data:");
+        for (int i = 0; i < eventos.size(); i++) {
+            System.out.println((i + 1) + ") " + eventos.get(i));
+        }
 
-        System.out.print("Número do evento para remover: ");
-        int n = input.nextInt();
+        System.out.print("Digite o número do evento para remover: ");
+        int num = input.nextInt();
         input.nextLine();
 
-        if (n < 1 || n > eventos.size()) {
+        if (num < 1 || num > eventos.size()) {
             System.out.println("Número inválido.");
             return;
         }
 
-        String removido = eventos.remove(n - 1);
+        String removido = eventos.remove(num - 1);
 
         if (eventos.isEmpty()) {
             agenda.remove(data);
@@ -178,26 +160,37 @@ public class Agenda {
         System.out.println("Evento removido: " + removido);
     }
 
-    public static void listarEventosData(Scanner input) {
+    public static void removerTodosEventosData(Scanner input) {
+        System.out.print("Data (DD/MM/YYYY): ");
+        String data = input.nextLine();
 
-        System.out.print("Data: ");
+        if (agenda.containsKey(data)) {
+            agenda.remove(data);
+            System.out.println("Todos os eventos dessa data foram removidos.");
+        } else {
+            System.out.println("Nenhum evento encontrado.");
+        }
+    }
+
+    public static void listarEventosPorData(Scanner input) {
+        System.out.print("Data (DD/MM/YYYY): ");
         String data = input.nextLine();
 
         List<String> eventos = agenda.get(data);
 
         if (eventos == null || eventos.isEmpty()) {
-            System.out.println("Nenhum evento nesta data.");
-            return;
+            System.out.println("Nenhum evento nessa data.");
+        } else {
+            System.out.println("\nEventos em " + data + ":");
+            for (String e : eventos) {
+                System.out.println(e);
+            }
         }
-
-        System.out.println("\nEventos de " + data + ":");
-        exibirEventos(eventos);
     }
 
-    public static void pesquisarPalavra(Scanner input) {
-
+    public static void pesquisarEventosPorPalavra(Scanner input) {
         System.out.print("Palavra-chave: ");
-        String chave = input.nextLine().toLowerCase(); //Para permitir pesquisas que não diferenciam maiúsculas de minúsculas.
+        String chave = input.nextLine().toLowerCase();
 
         boolean achou = false;
 
@@ -210,53 +203,24 @@ public class Agenda {
             }
         }
 
-        if (!achou)
+        if (!achou) {
             System.out.println("Nenhum evento encontrado.");
+        }
     }
 
-
-    public static void resumoEventos() {
-
+    // MOSTRAR TODOS OS EVENTOS
+    public static void mostrarTodosEventos() {
         if (agenda.isEmpty()) {
             System.out.println("Nenhum evento registrado.");
             return;
         }
 
-        int total = 0;
-
-        System.out.println("\n===== RESUMO =====");
-
+        System.out.println("\n=== TODOS OS EVENTOS ===");
         for (String data : agenda.keySet()) {
-            List<String> eventos = agenda.get(data);
-            total += eventos.size();
-
-            System.out.println(data + " → " + eventos.size() + " eventos");
-
-            for (String ev : eventos)
-                System.out.println("   " + ev);
-        }
-
-        System.out.println("\nTotal geral de eventos: " + total);
-    }
-
-    // FUNÇÕES AUXILIARES
-    private static void exibirEventos(List<String> eventos) {
-        for (int i = 0; i < eventos.size(); i++) {
-            System.out.println((i + 1) + ") " + eventos.get(i));
-        }
-    }
-
-    private static void ordenarEventos(List<String> eventos) {
-        Collections.sort(eventos);
-    }
-
-    private static boolean conflito(List<String> eventos, String horario) {
-        for (String e : eventos) {
-            if (e.startsWith(horario)) {
-                return true;
+            System.out.println(data + ":");
+            for (String evento : agenda.get(data)) {
+                System.out.println("  " + evento);
             }
         }
-        return false;
     }
-
 }
